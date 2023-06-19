@@ -14,7 +14,7 @@ some audio tracks, since the Pico only has around 264KB or RAM. :D  We'll see.
 Velocity Sensitivity Note:
 
 The keyswitches are quite clicky. They are HONYONE PB86 with integrated LED. Because the switches are SPDT Single-Pole-Double-Throw,
-there is a possibility of timing the switch's break-before-make to get velocity sensitivity.  
+there is a possibility of timing the switch's break-before-make to get velocity information.  
 
 That's why both throws on each switch are connected in the key matrix. 102 tiny little diodes.
 During testing though, the clicky-ness of the keys causes this feature to not work very well. 
