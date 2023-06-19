@@ -1,5 +1,12 @@
 # PicoDAW
-A portable music sequencer and sampler based on Raspberry Pi Pico
+A portable music sequencer and sampler based on Raspberry Pi Pico.  
+
+WORK IN PROGRESS. 
+
+I am just now populating the board and attempting to bring it up. 
+
+There's no software yet! Also, I'm hoping that the SDIO SD Card interface is fast enough to stream
+some audio tracks, since the Pico only has around 250KB or RAM. :D  We'll see.
 
 ![top](https://github.com/caiannello/PicoDAW/blob/main/hardware/WIP_Top.jpg)
 ![bottom](https://github.com/caiannello/PicoDAW/blob/main/hardware/WIP_Bottom.jpg)
