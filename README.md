@@ -10,7 +10,6 @@ some audio tracks, since the Pico only has around 264KB or RAM. :D  We'll see.
 
 ![top](https://github.com/caiannello/PicoDAW/blob/main/hardware/WIP_Top.jpg)
 ![bottom](https://github.com/caiannello/PicoDAW/blob/main/hardware/WIP_Bottom.jpg)
-![schematic](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_schematic_v0.1.png)
 
 Velocity Sensitivity Note:
 
@@ -24,4 +23,5 @@ I tried anneling the switch's spring with heat, but that was a fail.
 
 Maybe someday I'll find some more suitable SPDT switches.
 
+![schematic](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_schematic_v0.1.png)
 ![layout](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_layout_v0.1.png)
