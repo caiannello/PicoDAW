@@ -3,30 +3,81 @@
 // atmega328p_keys_and_leds.c
 //
 // This is the firmware for the little ATMEGA328P MCU of the Pico DAW.
+// It controls the LED's, reads the keyboard, and communicates with
+// Pi Pico over an I2C interface.
 //
-// It uses 74LS164D shift-register IC's for a couple different purposes:
+// SWITCH MATRIX - PHYSICAL
 //
-// 1. Scans successive rows of key-switches, eight at a time,
-// to sample which ones might be pressed down.
+// There's a row of eight click-able rotary encoders up top, and each
+// contains three outputs: click, quadrature A, and quadrature B.
 //
-// There are 15 rows of switches. We walk a single 0-bit through the
-// cascaded row-select registers to select that one row at a time.
-// If any switch on that row is pressed down, the corresponding
-// column-input bit on PORTD will go low.
+// Beneath the encoders are six rows of eight SPDT pushbuttons.
+// Each button has one LED and two outputs: a normally-closed contact,
+// and a normally-open contact.
 //
-// We read PORTD once per row, and note which switches have changed
-// states.
+// When a button is pressed or released, we can time the break-before-make
+// between the two contacts to get an indication of velocity, though the
+// clicky nature of these buttons distorts the results.
 //
-// The keys are single-pole-double-throw, so each key actually contains
-// two switches: A normally closed one, and a normally open one. By quickly
-// scanning the matrix, we can time the break-before-make of the switches
-// to get an indication of how quickly each key has been depressed or
-// released. (Our switches are fairly clicky though, and this snap-action
-// somewhat defeats the velocity sensing. We're going to try it anyway.)
+// Seven pushbuttons are left vacant in the design.
 //
-// 2. Selects successive rows of LED's, eight at a time, to illuminate
-// selected LEDS. Each LED can be set to 0: Off, 1: Slow Blink,
-// 2: Fast Blink, or 3: ON.
+// SWITCH MATRIX AND LED MATRIX - ELECTRICAL
+//
+// The electrical switch matrix has fifteen rows of eight columns,
+// accounting for all the outputs of the encoders and pushbuttons.
+//
+// Each device occupies one column of the matrix, and either three or
+// two rows, respectively, for encoders or pushbuttons.
+//
+// The top three rows are for the encoders:
+//
+// Row 0: Encoder Quadrature A
+// Row 1: Encoder Quadrature B
+// Row 2: Encoder Click
+//
+// The remaining twelve rows are for the pushbuttons:
+//
+// Row 3: Pushbutton row 0 contact, Normally-Open
+// Row 4: Pushbutton row 0 contact, Normally-Closed
+// ...
+// Row 13: Pushbutton row 5 contact, Normally-Open
+// Row 14: Pushbutton row 5 contact, Normally-Closed
+//
+// Each button has an LED, so there is also a LED matrix which is
+// electrically distinct from the switch matrix. It is six rows
+// by eight columns.
+//
+// SWITCH MATRIX INTERFACE
+//
+// A naive approach for hooking the matrix up to an MCU might entail
+// assigning a GPIO pin to every row and column:
+//
+// 15 x 8 = 120 GPIO pins! (We don't have that many.)
+//
+// One alternative is to use an IC called a 74LS164D, which is a
+// serial-in, parallel-out shift register. It has two inputs,
+// clock and data, and eight controllable outputs. You can clock eight
+// bits into the chip to set the outputs, using only two GPIO pins.
+// These chips can also be cascaded to add more outputs without
+// needing any more GPIO's.
+//
+// Two of these chips are cascaded and to select which of the fifteen
+// switch rows we would like to read. A row is selected by outputting
+// a zero (0 Volts), and all the other rows are de-selected by
+// outputting a one (5V)
+//
+// Another eight GPIO's (PORTD, inputs) are connected to the switch columns.
+// (PORTD.0 is the leftmost column and PORTD.7 is the rightmost.)
+// We can read all switches on the selected row by reading PORTD.
+//
+// On startup, the row selection is initialized by clocking in sixteen
+// ones, followed by a single zero. This selects the first switch row.
+//
+// Fifteen times, we read PORTD and then clock in a one to select the
+// next row.
+//
+// After that, we clock in a single zero to shift that old zero out of
+// the top of the register and select the first row again.
 //
 // As keyboard events occur, we queue them for output to the main CPU,
 // a Raspberry Pi Pico-W. The interface is a two-wire I2C bus.
@@ -42,9 +93,6 @@
 // ----------------------------------------------------------------------------
 #define MAIN_CPU_HZ     8000000.0
 #define KB_FULLSCAN_HZ  2000.0
-// ----------------------------------------------------------------------------
-// The switch matrix is 15x8, with 120 intersections, but 7 are unpopulated.
-// The led matrix is 6x8, so there's 48 LEDs.
 // ----------------------------------------------------------------------------
 uint8_t sw_states[15];
 uint8_t led_states[6];
@@ -96,13 +144,6 @@ ISR (TIMER0_OVF_vect)
   kb_scan_flag = 1;
 }
 // ----------------------------------------------------------------------------
-// Delay used for shift-register clock pulses
-// ----------------------------------------------------------------------------
-inline void clk_delay(void)
-{
-    //asm("nop;");
-}
-// ----------------------------------------------------------------------------
 // Initialize the state of all shift registers.
 // Selects the first row each of both the switch and the LED matrices.
 //
@@ -116,18 +157,14 @@ inline void regs_reset(void)
   for (uint8_t i=0;i<16;i++)
   {
     PORTB &= ~0x2A; // start clock pulses on led row, sw row, and sw col
-    //clk_delay();
     PORTB |=  0x2A; // end clock pulses
-    //clk_delay();
   }
   // clock a single 0 into the sw row reg to select the first sw row,
   // and clock a single 1 into the led row reg to select the first led row
   PORTB &= 0xFE;  // SW_ROW_DAT = 0
   PORTB |= 0x04;  // LED_ROW_DAT = 1
   PORTB &= ~0x0A; // LED_ROW_CLK = 0, SW_ROW_CLK = 0
-  //clk_delay();
   PORTB |= 0x0A;  // LED_ROW_CLK = 1, SW_ROW_CLK = 1
-  //clk_delay();
   PORTB &= ~0x04; // LED_ROW_DAT = 0
   PORTB |= 0x01;  // SW_ROW_DAT = 1
 }
@@ -137,7 +174,6 @@ inline void regs_reset(void)
 inline void regs_clear(void)
 {
   PORTC &= 0xFE; // start reset pulse
-  //clk_delay();
   PORTC |= 0x01; // end reset pulse
 }
 // ----------------------------------------------------------------------------
@@ -153,12 +189,9 @@ inline void set_led_row(uint8_t cols)
       PORTB|= 0x10;   // LED_COL_DAT = NOT cols.LSB
     // clock the bit value into the cols register
     PORTB &= ~0x20;   // LED_COL_CLK = 0
-    //clk_delay();
     PORTB |= 0x20;    // LED_COL_CLK = 1
-    //clk_delay();
     cols>>=1;         // select next bit of cols value
   }
-
 }
 // ----------------------------------------------------------------------------
 inline void refresh_led_row(void)
@@ -171,18 +204,14 @@ inline void refresh_led_row(void)
     cur_led_row = 0;
     PORTB |= 0x04;  // LED_ROW_DAT = 1
     PORTB &= ~0x08; // LED_ROW_CLK = 0
-    //clk_delay();
     PORTB |= 0x08;  // LED_ROW_CLK = 1
-    //clk_delay();
     // don't select more than one LED row at a time
     PORTB &= ~0x04; // LED_ROW_DAT = 0
   } else  // still have led rows left to update
   {
     // select next led row
     PORTB &= ~0x08; // LED_ROW_CLK = 0
-    //clk_delay();
     PORTB |= 0x08;  // LED_ROW_CLK = 1
-    //clk_delay();
   }
 }
 // ----------------------------------------------------------------------------
@@ -190,20 +219,18 @@ inline void refresh_led_row(void)
 // ----------------------------------------------------------------------------
 inline void scan_kb(void)
 {
+  // sample all 15 switch rows
   for(uint8_t row=0;row<15;row++)
   {
-    sw_states[row] = PIND;
+    sw_states[row] = PIND;  // read the eight columns of the switch row
     PORTB &= ~0x02; // SW_ROW_CLK = 0
-    //clk_delay();
     PORTB |= 0x02;  // SW_ROW_CLK = 1
   }
-  // reselect first switch row
+  // shift out that old zero, and re-select first switch row
   PORTB &= ~0x01; // SW_ROW_DAT = 0
   PORTB &= ~0x02; // SW_ROW_CLK = 0
-  //clk_delay();
   PORTB |= 0x02;  // SW_ROW_CLK = 1
   PORTB |= 0x01;  // SW_ROW_DAT = 1
-
 }
 // ----------------------------------------------------------------------------
 // indicate error state by forever animating first row of LEDs
@@ -235,16 +262,11 @@ void do_guru_meditation()
 int main(void)
 {
     uint8_t rows = 0;
-    init();
+    srand(314);   // random numbers are fun
+    init();       // init MCU IO and timers
     regs_clear();
-    regs_reset();
-
-    // write some random vals to the LED states
-    srand(314);
-    for(uint8_t i = 0; i<6;i++)
-      led_states[i]=rand()%256;
-
-    while (1) // begin mainloop
+    regs_reset(); // select first switch row and first LED row
+    while (1)     // begin mainloop
     {
       if(kb_scan_flag)
       {
@@ -255,16 +277,13 @@ int main(void)
         {
           rows=0;
           led_states[rand()%6] = rand()%256;
-
         }
-        if(kb_scan_flag)  // too slow! go into guru meditation
+        if(kb_scan_flag)  // too slow! go into guru meditation mode
         {
           do_guru_meditation();
         }
-
-      }
-
-    }  // end mainloop
+      }           // finished a scan of the keyboard
+    }             // end mainloop
 }
 ///////////////////////////////////////////////////////////////////////////////
 // EOF

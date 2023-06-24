@@ -6,3 +6,17 @@ software/atmega328p_keys_and_leds/.vs/atmega328p_keys_and_leds/v14/.atsuo
 *.d
 *.o
 *.mk
+*.b#1
+*.b#2
+*.b#3
+*.b#4
+hardware/nobrain_v0.2.b\#5
+hardware/nobrain_v0.2.b\#6
+hardware/nobrain_v0.2.b\#7
+hardware/nobrain_v0.2.b\#8
+hardware/nobrain_v0.2.pro
+hardware/nobrain_v0.2.s\#1
+hardware/nobrain_v0.2.s\#2
+hardware/nobrain_v0.2.s\#3
+hardware/nobrain_v0.2.s\#4
+hardware/nobrain_v0.2.s\#5
