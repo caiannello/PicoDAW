@@ -41,7 +41,7 @@
 #include <avr/interrupt.h>
 // ----------------------------------------------------------------------------
 #define MAIN_CPU_HZ     8000000.0
-#define KB_FULLSCAN_HZ  1000.0
+#define KB_FULLSCAN_HZ  2000.0
 // ----------------------------------------------------------------------------
 // The switch matrix is 15x8, with 120 intersections, but 7 are unpopulated.
 // The led matrix is 6x8, so there's 48 LEDs.
@@ -82,7 +82,7 @@ void init(void)
   TCCR0A = 0x03;
   TCCR0B = 0x0C;
 
-  // timer 0 - set TOP value for desires rollover rate
+  // timer 0 - set TOP value for desired rollover rate
   OCR0A = MAIN_CPU_HZ / 256.0 / KB_FULLSCAN_HZ;
 
   // enable rollover interrupt
@@ -116,19 +116,20 @@ inline void regs_reset(void)
   for (uint8_t i=0;i<16;i++)
   {
     PORTB &= ~0x2A; // start clock pulses on led row, sw row, and sw col
-    clk_delay();
+    //clk_delay();
     PORTB |=  0x2A; // end clock pulses
-    clk_delay();
+    //clk_delay();
   }
   // clock a single 0 into the sw row reg to select the first sw row,
   // and clock a single 1 into the led row reg to select the first led row
   PORTB &= 0xFE;  // SW_ROW_DAT = 0
   PORTB |= 0x04;  // LED_ROW_DAT = 1
   PORTB &= ~0x0A; // LED_ROW_CLK = 0, SW_ROW_CLK = 0
-  clk_delay();
+  //clk_delay();
   PORTB |= 0x0A;  // LED_ROW_CLK = 1, SW_ROW_CLK = 1
-  clk_delay();
-  PORTB &= ~0x04;  // LED_ROW_DAT = 0
+  //clk_delay();
+  PORTB &= ~0x04; // LED_ROW_DAT = 0
+  PORTB |= 0x01;  // SW_ROW_DAT = 1
 }
 // ----------------------------------------------------------------------------
 // resets all shiftregs to 0's - not really very useful
@@ -136,7 +137,7 @@ inline void regs_reset(void)
 inline void regs_clear(void)
 {
   PORTC &= 0xFE; // start reset pulse
-  clk_delay();
+  //clk_delay();
   PORTC |= 0x01; // end reset pulse
 }
 // ----------------------------------------------------------------------------
@@ -170,18 +171,18 @@ inline void refresh_led_row(void)
     cur_led_row = 0;
     PORTB |= 0x04;  // LED_ROW_DAT = 1
     PORTB &= ~0x08; // LED_ROW_CLK = 0
-    clk_delay();
+    //clk_delay();
     PORTB |= 0x08;  // LED_ROW_CLK = 1
-    clk_delay();
+    //clk_delay();
     // don't select more than one LED row at a time
     PORTB &= ~0x04; // LED_ROW_DAT = 0
   } else  // still have led rows left to update
   {
     // select next led row
     PORTB &= ~0x08; // LED_ROW_CLK = 0
-    clk_delay();
+    //clk_delay();
     PORTB |= 0x08;  // LED_ROW_CLK = 1
-    clk_delay();
+    //clk_delay();
   }
 }
 // ----------------------------------------------------------------------------
@@ -189,6 +190,19 @@ inline void refresh_led_row(void)
 // ----------------------------------------------------------------------------
 inline void scan_kb(void)
 {
+  for(uint8_t row=0;row<15;row++)
+  {
+    sw_states[row] = PIND;
+    PORTB &= ~0x02; // SW_ROW_CLK = 0
+    //clk_delay();
+    PORTB |= 0x02;  // SW_ROW_CLK = 1
+  }
+  // reselect first switch row
+  PORTB &= ~0x01; // SW_ROW_DAT = 0
+  PORTB &= ~0x02; // SW_ROW_CLK = 0
+  //clk_delay();
+  PORTB |= 0x02;  // SW_ROW_CLK = 1
+  PORTB |= 0x01;  // SW_ROW_DAT = 1
 
 }
 // ----------------------------------------------------------------------------
