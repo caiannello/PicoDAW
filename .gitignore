@@ -1,0 +1,8 @@
+
+software/atmega328p_keys_and_leds/.vs/atmega328p_keys_and_leds/v14/.atsuo
+*.eep
+*.lss
+*.map
+*.d
+*.o
+*.mk
