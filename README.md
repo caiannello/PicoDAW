@@ -27,4 +27,5 @@ Maybe someday I'll find some more suitable SPDT switches, but at least these one
 ![layout](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_layout_v0.1.png)
 
 Let's have an animated GIF on this page like its 1995!!
+
 ![blinky](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_leds.gif)
