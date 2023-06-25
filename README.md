@@ -25,3 +25,5 @@ Maybe someday I'll find some more suitable SPDT switches, but at least these one
 
 ![schematic](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_schematic_v0.1.png)
 ![layout](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_layout_v0.1.png)
+
+![blinky](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_leds.gif)
