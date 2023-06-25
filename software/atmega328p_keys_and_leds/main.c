@@ -49,35 +49,37 @@
 //
 // SWITCH MATRIX INTERFACE
 //
-// A naive approach for hooking the matrix up to an MCU might entail
-// assigning a GPIO pin to every row and column:
-//
-// 15 x 8 = 120 GPIO pins! (We don't have that many.)
+// A naive approach for hooking both the matrices up to an MCU might
+// to to hook each row and column to a GPIO on the MCU, but there are
+// 37 of them! We don't have that many pins to spare.
 //
 // One alternative is to use an IC called a 74LS164D, which is a
 // serial-in, parallel-out shift register. It has two inputs,
-// clock and data, and eight controllable outputs. You can clock eight
-// bits into the chip to set the outputs, using only two GPIO pins.
+// clock and data, and eight outputs. You can clock eight bits into
+// the chip to set the state of outputs, using only two GPIO pins.
+//
 // These chips can also be cascaded to add more outputs without
 // needing any more GPIO's.
 //
-// Two of these chips are cascaded and to select which of the fifteen
-// switch rows we would like to read. A row is selected by outputting
-// a zero (0 Volts), and all the other rows are de-selected by
-// outputting a one (5V)
+// Two of these chips are cascaded to allow the MCU to select which
+// of the 15 switch rows to read. A row is selected by outputting
+// a zero state (0 Volts) on that row, and one states (5V) on all
+// the other rows.
 //
-// Another eight GPIO's (PORTD, inputs) are connected to the switch columns.
-// (PORTD.0 is the leftmost column and PORTD.7 is the rightmost.)
-// We can read all switches on the selected row by reading PORTD.
+// Each column is hooked up to a GPIO input, and reading them
+// will let us determine the state of the switches in the selected
+// row. (Open switches will read one, and closed switches will read
+// zero.)
 //
 // On startup, the row selection is initialized by clocking in sixteen
 // ones, followed by a single zero. This selects the first switch row.
 //
-// Fifteen times, we read PORTD and then clock in a one to select the
-// next row.
+// Fifteen times, we read PORTD and then clock in a one, which shifts
+// that zero bit down to select the next row.
 //
-// After that, we clock in a single zero to shift that old zero out of
-// the top of the register and select the first row again.
+// After all fifteen rows have been read, we clock in a single zero,
+// which shifts that old zero out of the top of the register and
+// selects the first row again.
 //
 // As keyboard events occur, we queue them for output to the main CPU,
 // a Raspberry Pi Pico-W. The interface is a two-wire I2C bus.
