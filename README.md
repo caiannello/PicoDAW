@@ -8,7 +8,8 @@ I am just now populating the board and attempting to bring it up.
 There's no software yet! Also, I'm hoping that the SDIO SD Card interface is fast enough to stream
 some audio tracks, since the Pico only has around 264KB or RAM. :D  We'll see.
 
-Let's have an animated GIF on this page like its 1995!!
+Haven't yet dialed-in the LCD picture settings, such as gamma tables. It will be better. 
+Also, the PicoDAW UI will have a dark background and limited onscreen colors.
 
 ![LCD bring-up](https://github.com/caiannello/PicoDAW/blob/main/hardware/lcd_bringup.jpg)
 
