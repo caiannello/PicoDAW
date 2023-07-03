@@ -47,7 +47,7 @@
 // electrically distinct from the switch matrix. It is six rows
 // by eight columns.
 //
-// SWITCH MATRIX INTERFACE
+// MATRIX INTERFACE
 //
 // A naive approach for hooking both the matrices up to an MCU might
 // to to hook each row and column to a GPIO on the MCU, but there are
@@ -81,6 +81,20 @@
 // which shifts that old zero out of the top of the register and
 // selects the first row again.
 //
+// The circuitry for the LED matrix is similar, but now one shift
+// register selects LED row, and another shift register sets the
+// state of all the columns of the selected row. The column-select
+// is the same 74LS164D as was used on the switch matrix, but the
+// row select is a slightly different chip: It is a 74LS595D, which
+// adds two inputs: latch-enable and output-enable. This is so we
+// can turn off the output-enable (turning off all LEDs) whenever
+// new column data is shifted in, so OFF LEDs wont be seen dimly
+// flickering during the update process.
+//
+// We want to scan the key matrix quickly to allow velocity measurement,
+// but we can update the LED matrix much slower: one LED row for every full
+// scan of the KB, or all LED rows will be updated every six KB scans.
+//
 // As keyboard events occur, we queue them for output to the main CPU,
 // a Raspberry Pi Pico-W. The interface is a two-wire I2C bus.
 //
@@ -92,15 +106,17 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include "TWI_Master.h"
 // ----------------------------------------------------------------------------
 #define MAIN_CPU_HZ     8000000.0
-#define KB_FULLSCAN_HZ  2000.0
+#define KB_FULLSCAN_HZ  1000.0    // (333 Hz LED update rate)
 // ----------------------------------------------------------------------------
-uint8_t sw_states[15];
+uint8_t sw_states[16];
 uint8_t led_states[6];
 uint8_t cur_led_row = 0;  // current led row for refresh
+unsigned char TWI_targetSlaveAddress = 0x30<<1;
 // ----------------------------------------------------------------------------
-// timer ISR sets this flag to tell mainloop to scan the key matrix again
+// timer ISR sets this flag to tell main-loop to scan the key matrix again
 // ----------------------------------------------------------------------------
 volatile uint8_t kb_scan_flag = 0;
 // ----------------------------------------------------------------------------
@@ -108,6 +124,8 @@ volatile uint8_t kb_scan_flag = 0;
 // ----------------------------------------------------------------------------
 void init(void)
 {
+  // Setup GPIO pins.
+
   // PORTB: 7: NC,          6: NC,          5: LED_COL_CLK, 4: LED_COL_DAT,
   //        3: LED_ROW_CLK, 2: LED_ROW_DAT, 1: SW_ROW_CLK,  0: SW_ROW_DAT
   DDRB  = 0b00111111;
@@ -115,28 +133,27 @@ void init(void)
   // PORTC: 7: NC,          6: NC,          5: I2C_SCL,     4: I2C_SDA,
   //        3: NC,          2: NC,          1: NC,          0: SHIFTREGS_RESET
   DDRC  = 0b00000001;
-  PORTC = 0b11111111;
+  PORTC = 0b11001111;
   // PORTD: 7: SW_COL_7,    6: SW_COL_6,    5: SW_COL_5,    4: SW_COL_4,
   //        3: SW_COL_3,    2: SW_COL_2,    1: SW_COL_1,    0: SW_COL_0
   DDRD  = 0b00000000;
   PORTD = 0b00000000;
 
   // disable interrupts
-
   cli();
-
   // timer 0 : Each rollover starts a full scan of the key matrix
   // and updates 1 of the 6 LED rows
-
   // timer 0 - Fast PWM, rollover at TOP (OCR0A) , prescaler: clk/256
   TCCR0A = 0x03;
   TCCR0B = 0x0C;
-
   // timer 0 - set TOP value for desired rollover rate
   OCR0A = MAIN_CPU_HZ / 256.0 / KB_FULLSCAN_HZ;
-
-  // enable rollover interrupt
+  // enable timer 0 rollover interrupt
   TIMSK0 = 0x01;
+
+  // Setup our main output interface (i2c) to the Pi Pico W (main) CPU.
+  TWI_Master_Initialise();
+
   // enable interrupts
   sei();
 }
@@ -148,8 +165,6 @@ ISR (TIMER0_OVF_vect)
 // ----------------------------------------------------------------------------
 // Initialize the state of all shift registers.
 // Selects the first row each of both the switch and the LED matrices.
-//
-// Done periodically, in case a noise spike glitched things out of sync.
 // ----------------------------------------------------------------------------
 inline void regs_reset(void)
 {
@@ -171,7 +186,7 @@ inline void regs_reset(void)
   PORTB |= 0x01;  // SW_ROW_DAT = 1
 }
 // ----------------------------------------------------------------------------
-// resets all shiftregs to 0's - not really very useful
+// resets all shift regs to 0's - not really very useful
 // ----------------------------------------------------------------------------
 inline void regs_clear(void)
 {
@@ -224,11 +239,14 @@ inline void scan_kb(void)
   // sample all 15 switch rows
   for(uint8_t row=0;row<15;row++)
   {
-    sw_states[row] = PIND;  // read the eight columns of the switch row
+    uint8_t b = PIND;
+    sw_states[row+1] = b;  // read the eight columns of the switch row
     PORTB &= ~0x02; // SW_ROW_CLK = 0
     PORTB |= 0x02;  // SW_ROW_CLK = 1
   }
-  // shift out that old zero, and re-select first switch row
+  sw_states[0] = TWI_targetSlaveAddress;
+  TWI_Start_Transceiver_With_Data( sw_states, 16 );
+  // re-select first switch row
   PORTB &= ~0x01; // SW_ROW_DAT = 0
   PORTB &= ~0x02; // SW_ROW_CLK = 0
   PORTB |= 0x02;  // SW_ROW_CLK = 1
@@ -259,16 +277,13 @@ void do_guru_meditation()
   }
 }
 // ----------------------------------------------------------------------------
-// Program entrypoint and mainloop
-// ----------------------------------------------------------------------------
 int main(void)
 {
     uint8_t rows = 0;
-    srand(314);   // random numbers are fun
     init();       // init MCU IO and timers
     regs_clear();
     regs_reset(); // select first switch row and first LED row
-    while (1)     // begin mainloop
+    while (1)     // begin main-loop
     {
       if(kb_scan_flag)
       {
@@ -285,7 +300,7 @@ int main(void)
           do_guru_meditation();
         }
       }           // finished a scan of the keyboard
-    }             // end mainloop
+    }             // end main-loop
 }
 ///////////////////////////////////////////////////////////////////////////////
 // EOF
