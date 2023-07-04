@@ -114,7 +114,7 @@
 uint8_t sw_states[16];
 uint8_t led_states[6];
 uint8_t cur_led_row = 0;  // current led row for refresh
-unsigned char TWI_targetSlaveAddress = 0x30<<1;
+unsigned char TWI_targetSlaveAddress = 0x30;
 // ----------------------------------------------------------------------------
 // timer ISR sets this flag to tell main-loop to scan the key matrix again
 // ----------------------------------------------------------------------------
@@ -244,7 +244,7 @@ inline void scan_kb(void)
     PORTB &= ~0x02; // SW_ROW_CLK = 0
     PORTB |= 0x02;  // SW_ROW_CLK = 1
   }
-  sw_states[0] = TWI_targetSlaveAddress;
+  sw_states[0] = TWI_targetSlaveAddress << 1;
   TWI_Start_Transceiver_With_Data( sw_states, 16 );
   // re-select first switch row
   PORTB &= ~0x01; // SW_ROW_DAT = 0
