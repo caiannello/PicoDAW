@@ -1,6 +1,6 @@
-Note, this Arduino project uses the excellent [TFT LCD library, TFT_eSPI, by Bodmer.](https://github.com/Bodmer/TFT_eSPI)
+Note, this Arduino project uses the excellent gfx library, [TFT_eSPI, by Bodmer.](https://github.com/Bodmer/TFT_eSPI)
 
-Before compiling, you have to customize one file of the library to reflect the GPIO connections which this project has defined for control of the LCD. 
+Before compiling, you have to customize one file of the library to reflect the GPIO connections which this project has defined for control of the LCD. I tried defining them in my project, but it didn't work.
 
 In "Arduino/libraries/TFT_eSPI-master/User_setup.h":
 ```
