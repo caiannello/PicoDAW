@@ -31,6 +31,10 @@ Maybe someday I'll find some more suitable SPDT switches, but at least these one
 ![schematic](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_schematic_v0.1.png)
 ![layout](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_layout_v0.1.png)
 
+I've modelled a case and ordered it on Craftcloud.
+
+![case design](https://github.com/caiannello/PicoDAW/blob/main/sketchup_3D/orange_case.png)
+
 Let's have an animated GIF on this page like its 1995!!
 
 ![blinky](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_leds.gif)
