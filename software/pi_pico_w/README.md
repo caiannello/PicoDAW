@@ -5,7 +5,7 @@ Before compiling, you have to customize one file of the library to reflect the G
 In "Arduino/libraries/TFT_eSPI-master/User_setup.h":
 ```
 #define USER_SETUP_INFO "User_Setup"
-#define RPI_ILI9486_DRIVER // 20MHz maximum SPI
+#define RPI_ILI9486_DRIVER
 
 #define TFT_SPI_PORT 0
 #define TFT_MISO  0   // Automatically assigned with ESP8266 if not defined
@@ -19,6 +19,7 @@ In "Arduino/libraries/TFT_eSPI-master/User_setup.h":
 #define SPI_FREQUENCY  27000000
 #define SPI_READ_FREQUENCY  20000000
 ```
+Note the 27MHz SPI clock speed. If you experience graphical glitches, try lowering that value.
 
 
 
