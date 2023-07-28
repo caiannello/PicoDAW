@@ -1,3 +1,5 @@
+So far, the Pi Pico code is just a switch / LCD test, with an attempt at a tone generator.
+
 Note, this Arduino project uses the excellent gfx library, [TFT_eSPI, by Bodmer.](https://github.com/Bodmer/TFT_eSPI)
 
 Before compiling, you have to customize one file of the library to reflect the GPIO connections to the LCD. (I tried defining them in my project, but I was unsuccessful.)
