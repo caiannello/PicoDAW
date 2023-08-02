@@ -28,8 +28,8 @@ I tried anneling the switch's spring with heat, but that was a fail.
 
 Maybe someday I'll find some more suitable SPDT switches, but at least these ones look really cool!
 
-![schematic](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_schematic_v0.1.png)
-![layout](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_layout_v0.1.png)
+![schematic](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_schematic_v0.3.png)
+![layout](https://github.com/caiannello/PicoDAW/blob/main/hardware/pico_daw_layout_v0.3.png)
 
 I've modelled a case and ordered it on Craftcloud.
 
