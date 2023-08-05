@@ -3,13 +3,12 @@ A portable music sequencer and sampler based on Raspberry Pi Pico.
 
 WORK IN PROGRESS. 
 
-I am just now populating the board and attempting to bring it up. 
-
 There's no software yet! Also, I'm hoping that the SDIO SD Card interface is fast enough to stream
 some audio tracks, since the Pico only has around 264KB or RAM. :D  We'll see.
 
-Haven't yet dialed-in the LCD picture settings, such as gamma tables. It will be better. 
-Also, the PicoDAW UI will have a dark background and limited onscreen colors.
+I have code in the Pico and keyboard MCU to test the switches and LCD. Lots of diodes
+need to be refitted, but progress is slowly being made. It is not yet able to make
+any sounds.
 
 ![LCD bring-up](https://github.com/caiannello/PicoDAW/blob/main/hardware/lcd_bringup.jpg)
 
