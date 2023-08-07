@@ -10,9 +10,6 @@ I have code in the Pico and keyboard MCU to test the switches and LCD. Lots of d
 need to be refitted, but progress is slowly being made. It is not yet able to make
 any sounds.  
 
-The display doesnt yet fit inside the case because the pin headers are too tall. (I need to 
-remove the headers and solder the LCD directly to the PCB.)
-
 ![LCD bring-up](https://github.com/caiannello/PicoDAW/blob/main/hardware/lcd_bringup.jpg)
 
 ![top](https://github.com/caiannello/PicoDAW/blob/main/hardware/WIP_Top.jpg)
