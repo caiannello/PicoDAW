@@ -111,8 +111,13 @@ void setup()
   tft.setTextColor(TFT_WHITE);
   tft.setCursor(0, 0);
 
-  // kb controller i2c
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, 1);
 
+  Serial.begin(115200);
+  Serial.println("I2S simple tone");
+
+  // kb controller i2c
   pinMode(6,INPUT);
   pinMode(7,INPUT);
   Wire1.onReceive(recv);
@@ -121,24 +126,22 @@ void setup()
   Wire1.setSCL(7);
   Wire1.begin(0x30);
 
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, 1);
-
-  Serial.begin(115200);
-  Serial.println("I2S simple tone");
-
-
   // audio codec i2c
-/* 
+  #define pSCL  15
+  #define pSDA  14
   pinMode(pSCL,INPUT);
   pinMode(pSDA,INPUT);
+
+  //Wire.setSDA(pSDA);
+  //Wire.setSCL(pSCL);
+
+  /*
   Wire.setSDA(pSDA);
   Wire.setSCL(pSCL);
   Wire.setClock(100000);
   Wire.onReceive(codec_i2c_recv);
   Wire.onRequest(codec_i2c_req);
   Wire.begin();
-
   I2C_WriteWAU8822(0,  0x000);   // Reset all registers 
   Delay(0x200);
   I2C_WriteWAU8822(1,  0x02F);
@@ -165,6 +168,7 @@ void setup()
   I2S_EnableMCLK(12000000);
   WAU8822_ConfigSampleRate(sampleRate);
   */
+
   i2s.setBCLK(pBCLK);
   i2s.setDATA(pDOUT);
   i2s.setBitsPerSample(16);
@@ -204,7 +208,7 @@ void req()
 // Called when the I2C slave gets written to
 void codec_i2c_recv(int len) 
 {
-    for (int i=0; i<len; i++) codec_i2c_buff[i] = Wire1.read();
+    for (int i=0; i<len; i++) codec_i2c_buff[i] = Wire.read();
     codec_i2c_last_len = len;
 }
 
@@ -215,8 +219,9 @@ void codec_i2c_req()
     char buff[7];
     // Return a simple incrementing hex value
     sprintf(buff, "%06X", (ctr++) % 65535);
-    Wire1.write(buff, 6);
+    Wire.write(buff, 6);
 }
+
 
 void switch_test(void)
 {
@@ -246,9 +251,20 @@ void switch_test(void)
     }
   }  
 }
+
+void codec_test(void)
+{
+  tft.setTextSize(2);
+  tft.setCursor(0, 25);
+  tft.setTextColor(TFT_VFD_BLUWHT);//TFT_VFD_ORANGE);
+  tft.print("I hope she's making some noise!!!");
+  while(1);
+}
+
 void loop() 
 {
   switch_test();
+  //codec_test();
 }
 
 /*
