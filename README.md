@@ -10,6 +10,7 @@ I have code in the Pico and keyboard MCU to test the switches and LCD. Lots of d
 need to be refitted, but progress is slowly being made. It is not yet able to make
 any sounds.  
 
+(Mockup screen borrowed from the MilkyTracker project. Just a static image..)
 ![LCD bring-up](https://github.com/caiannello/PicoDAW/blob/main/hardware/lcd_bringup.jpg)
 
 ![top](https://github.com/caiannello/PicoDAW/blob/main/hardware/WIP_Top.jpg)
