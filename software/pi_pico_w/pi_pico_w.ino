@@ -10480,9 +10480,24 @@ void codec_i2c_req()
     Wire1.write(buff, 6);
 }
 
+void draw_mockup(void)
+{
+  uint16_t *p = (uint16_t *)(gimp_image.pixel_data);
+  for(int y=0;y<320;y++)
+  for(int x=0;x<480;x++)
+  {
+    tft.drawFastHLine(x, y, 1, *p);
+    p++;
+  }  
+}
 
 void switch_test(void)
 {
+  draw_mockup();
+
+  for(int y=20;y<42;y++)
+    tft.drawFastHLine(0, y, 480, 0);
+
   tft.setTextSize(2);
   char s[4];
   char lineout[40]="";
@@ -10512,17 +10527,10 @@ void switch_test(void)
 
 void codec_test(void)
 {
-  //tft.setTextSize(2);
-  //tft.setCursor(0, 25);
-  //tft.setTextColor(TFT_VFD_BLUWHT);//TFT_VFD_ORANGE);
-  //tft.print("I hope she's making some noise!!!");
-  uint16_t *p = (uint16_t *)(gimp_image.pixel_data);
-  for(int y=0;y<320;y++)
-  for(int x=0;x<480;x++)
-  {
-    tft.drawFastHLine(x, y, 1, *p);
-    p++;
-  }
+  tft.setTextSize(2);
+  tft.setCursor(0, 25);
+  tft.setTextColor(TFT_VFD_BLUWHT);//TFT_VFD_ORANGE);
+  tft.print("I hope she's making some noise!!!");
   while(1)
   {
       i2s.write16(rand()%65536,rand()%65536);
@@ -10531,8 +10539,8 @@ void codec_test(void)
 
 void loop() 
 {
-  //switch_test();
-  codec_test();
+  switch_test();
+  //codec_test();
 }
 
 
