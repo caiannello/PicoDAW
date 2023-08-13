@@ -127,8 +127,6 @@ void setup()
   Wire1.setSDA(pSDA);
   Wire1.setSCL(pSCL);
   Wire1.setClock(100000);
-  Wire1.onReceive(codec_i2c_recv);
-  Wire1.onRequest(codec_i2c_req);
   Wire1.begin();
 
   // audio codec init 
@@ -197,23 +195,6 @@ void req()
     // Return a simple incrementing hex value
     sprintf(buff, "%06X", (ctr++) % 65535);
     Wire.write(buff, 6);
-}
-
-// Called when the I2C slave gets written to
-void codec_i2c_recv(int len) 
-{
-    for (int i=0; i<len; i++) codec_i2c_buff[i] = Wire1.read();
-    codec_i2c_last_len = len;
-}
-
-// Called when the I2C slave is read from
-void codec_i2c_req() 
-{
-    static int ctr = 765;
-    char buff[7];
-    // Return a simple incrementing hex value
-    sprintf(buff, "%06X", (ctr++) % 65535);
-    Wire1.write(buff, 6);
 }
 
 void draw_mockup(void)
